@@ -1,46 +1,24 @@
 import './styles.css';
 
-// Project data
-const projects = [
-  {
-    id: 'harv',
-    title: 'HARV: AI Browser Extension',
-    description: 'HARV is a powerful browser extension that brings AI-powered assistance directly into your browsing experience!',
-    url: 'https://github.com/iamakchavan/HARV'
-  },
-  {
-    id: 'paradox',
-    title: 'Paradox',
-    description: 'A minimalistic Open-Source AI Chatbot combining powerful AI models for intelligent conversations with web search, coding, reasoning, and voice interaction capabilities.',
-    url: 'https://paradoxed.vercel.app/'
-  },
-  {
-    id: 'amazicons',
-    title: 'Amazicons',
-    description: "A collection of all the icons that you'll ever need, that I use in my designs too!",
-    url: 'https://www.figma.com/community/file/1484678564434143542'
-  },
-  {
-    id: 'cyberyear',
-    title: '2025-in-pixels',
-    description: 'A visual representation of 2025 in pixels with daily progress tracking.',
-    url: 'https://cyberyear.vercel.app/'
-  }
-];
-
 // DOM Elements
 let themeToggle;
 let themeText;
+let sunIcon;
+let moonIcon;
 let contactButton;
 let projectCards;
+let heroTitle;
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   // Get DOM elements
   themeToggle = document.getElementById('theme-toggle');
   themeText = document.getElementById('theme-text');
+  sunIcon = document.querySelector('.sun-icon');
+  moonIcon = document.querySelector('.moon-icon');
   contactButton = document.querySelector('.contact-button');
   projectCards = document.querySelectorAll('.project-card');
+  heroTitle = document.querySelector('.hero-title');
 
   // Initialize animations
   initializeAnimations();
@@ -50,22 +28,63 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Check for saved theme
   initializeTheme();
+
+  // Apply staggered animation to project cards
+  staggeredAnimation();
 });
 
 // Initialize animations with proper timing
 function initializeAnimations() {
   // Get all fade-in elements
-  const fadeElements = document.querySelectorAll('.fade-in');
+  const fadeElements = document.querySelectorAll('.fade-in-up');
   
   // Set animation order for each element
   fadeElements.forEach((el, index) => {
-    el.style.setProperty('--order', index);
-    // Start animation
-    setTimeout(() => {
-      el.style.opacity = 1;
-      el.style.transform = 'translateY(0)';
-    }, 100 * index);
+    // Add slight delay between elements
+    el.style.setProperty('--delay', `${index * 0.1}s`);
   });
+}
+
+// Apply staggered animation to elements
+function staggeredAnimation() {
+  // Add staggered animations to project cards
+  projectCards.forEach((card, index) => {
+    card.style.transitionDelay = `${index * 0.05}s`;
+    
+    // Observer for in-view animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('opacity-100');
+          entry.target.classList.remove('opacity-0', 'translate-y-4');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    observer.observe(card);
+  });
+
+  // Add hover effect to hero title
+  if (heroTitle) {
+    heroTitle.addEventListener('mousemove', (e) => {
+      const bounds = heroTitle.getBoundingClientRect();
+      const mouseX = e.clientX - bounds.left;
+      const mouseY = e.clientY - bounds.top;
+      
+      const centerX = bounds.width / 2;
+      const centerY = bounds.height / 2;
+      
+      const offsetX = (mouseX - centerX) / 25;
+      const offsetY = (mouseY - centerY) / 25;
+      
+      heroTitle.querySelector('span').style.transform = `perspective(1000px) rotateX(${-offsetY}deg) rotateY(${offsetX}deg) scale(1.02)`;
+    });
+    
+    heroTitle.addEventListener('mouseleave', () => {
+      heroTitle.querySelector('span').style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+    });
+  }
 }
 
 // Initialize event listeners
@@ -78,31 +97,36 @@ function initializeEventListeners() {
   // Contact button
   if (contactButton) {
     contactButton.addEventListener('click', () => {
-      // Simple animation for the ripple effect
-      const ripple = contactButton.querySelector('.ripple');
-      ripple.style.opacity = '0.7';
-      ripple.style.transform = 'scale(1)';
-      
-      // Reset animation
+      // Animate button
+      contactButton.classList.add('scale-95');
       setTimeout(() => {
-        ripple.style.opacity = '0';
-        ripple.style.transform = 'scale(1.5)';
-      }, 300);
+        contactButton.classList.remove('scale-95');
+      }, 200);
       
       // Redirect to email
       window.location.href = 'mailto:akchavan@outlook.com';
     });
   }
   
-  // Project card hover effects are handled by CSS
+  // Add hover effects for project cards
+  projectCards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      card.classList.add('group');
+    });
+    
+    card.addEventListener('mouseleave', () => {
+      card.classList.remove('group');
+    });
+  });
 }
 
 // Initialize theme based on user preference
 function initializeTheme() {
   // Check if user has a saved preference
   const savedTheme = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   
-  if (savedTheme === 'dark') {
+  if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
     enableDarkMode();
   } else {
     enableLightMode();
@@ -118,6 +142,12 @@ function toggleTheme() {
   } else {
     enableDarkMode();
   }
+  
+  // Add transition effect to theme toggle
+  themeToggle.classList.add('scale-90');
+  setTimeout(() => {
+    themeToggle.classList.remove('scale-90');
+  }, 200);
 }
 
 // Enable dark mode
@@ -125,15 +155,19 @@ function enableDarkMode() {
   document.documentElement.classList.add('dark');
   localStorage.setItem('theme', 'dark');
   
-  if (themeToggle) {
-    // Change sun icon to moon
-    themeToggle.innerHTML = `
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-    `;
+  // Update UI
+  if (sunIcon && moonIcon) {
+    sunIcon.classList.add('hidden');
+    moonIcon.classList.remove('hidden');
   }
   
   if (themeText) {
     themeText.textContent = 'Dark';
+  }
+  
+  if (themeToggle) {
+    themeToggle.classList.add('bg-gray-800');
+    themeToggle.classList.remove('bg-white');
   }
 }
 
@@ -142,23 +176,19 @@ function enableLightMode() {
   document.documentElement.classList.remove('dark');
   localStorage.setItem('theme', 'light');
   
-  if (themeToggle) {
-    // Change moon icon back to sun
-    themeToggle.innerHTML = `
-      <circle cx="12" cy="12" r="4"></circle>
-      <path d="M12 2v2"></path>
-      <path d="M12 20v2"></path>
-      <path d="m4.93 4.93 1.41 1.41"></path>
-      <path d="m17.66 17.66 1.41 1.41"></path>
-      <path d="M2 12h2"></path>
-      <path d="M20 12h2"></path>
-      <path d="m6.34 17.66-1.41 1.41"></path>
-      <path d="m19.07 4.93-1.41 1.41"></path>
-    `;
+  // Update UI
+  if (sunIcon && moonIcon) {
+    sunIcon.classList.remove('hidden');
+    moonIcon.classList.add('hidden');
   }
   
   if (themeText) {
     themeText.textContent = 'Light';
+  }
+  
+  if (themeToggle) {
+    themeToggle.classList.remove('bg-gray-800');
+    themeToggle.classList.add('bg-white');
   }
 }
 
