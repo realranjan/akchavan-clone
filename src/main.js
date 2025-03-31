@@ -1,6 +1,6 @@
 import './styles.css';
 
-// Projects data
+// Project data
 const projects = [
   {
     id: 'harv',
@@ -17,111 +17,150 @@ const projects = [
   {
     id: 'amazicons',
     title: 'Amazicons',
-    description: 'A collection of all the icons that you\'ll ever need, that I use in my designs too!',
+    description: "A collection of all the icons that you'll ever need, that I use in my designs too!",
     url: 'https://www.figma.com/community/file/1484678564434143542'
   },
   {
-    id: 'pixels',
+    id: 'cyberyear',
     title: '2025-in-pixels',
     description: 'A visual representation of 2025 in pixels with daily progress tracking.',
     url: 'https://cyberyear.vercel.app/'
   }
 ];
 
-// Animation functions
-function animateElements() {
-  // Name shimmer animation
-  const nameElement = document.querySelector('.shimmer-text');
-  if (nameElement) {
-    nameElement.style.animation = 'shimmer 3s ease-in-out infinite';
-  }
+// DOM Elements
+let themeToggle;
+let themeText;
+let contactButton;
+let projectCards;
 
-  // Staggered fade in animations
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Get DOM elements
+  themeToggle = document.getElementById('theme-toggle');
+  themeText = document.getElementById('theme-text');
+  contactButton = document.querySelector('.contact-button');
+  projectCards = document.querySelectorAll('.project-card');
+
+  // Initialize animations
+  initializeAnimations();
+  
+  // Initialize event listeners
+  initializeEventListeners();
+  
+  // Check for saved theme
+  initializeTheme();
+});
+
+// Initialize animations with proper timing
+function initializeAnimations() {
+  // Get all fade-in elements
   const fadeElements = document.querySelectorAll('.fade-in');
+  
+  // Set animation order for each element
   fadeElements.forEach((el, index) => {
+    el.style.setProperty('--order', index);
+    // Start animation
     setTimeout(() => {
-      el.style.opacity = '1';
+      el.style.opacity = 1;
       el.style.transform = 'translateY(0)';
     }, 100 * index);
   });
 }
 
-// Project card hover effects
-function setupProjectCards() {
-  const projectCards = document.querySelectorAll('.project-card');
-  projectCards.forEach(card => {
-    card.addEventListener('mouseenter', () => {
-      const background = card.querySelector('.card-bg');
-      const line = card.querySelector('.card-line');
-      const arrow = card.querySelector('.card-arrow');
-      
-      if (background) background.style.transform = 'scaleY(1)';
-      if (line) line.style.transform = 'scaleX(1)';
-      if (arrow) {
-        arrow.style.opacity = '1';
-        arrow.style.transform = 'translateY(0) translateX(0)';
-      }
-    });
-    
-    card.addEventListener('mouseleave', () => {
-      const background = card.querySelector('.card-bg');
-      const line = card.querySelector('.card-line');
-      const arrow = card.querySelector('.card-arrow');
-      
-      if (background) background.style.transform = 'scaleY(0)';
-      if (line) line.style.transform = 'scaleX(0)';
-      if (arrow) {
-        arrow.style.opacity = '0';
-        arrow.style.transform = 'translateY(-0.25rem) translateX(0.25rem)';
-      }
-    });
-  });
-}
-
-// Handle theme toggle
-function setupThemeToggle() {
-  const themeToggle = document.getElementById('theme-toggle');
-  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  
-  // Set initial theme based on system preference
-  document.documentElement.classList.toggle('dark', systemTheme === 'dark');
-  
+// Initialize event listeners
+function initializeEventListeners() {
+  // Theme toggle
   if (themeToggle) {
-    themeToggle.textContent = systemTheme === 'dark' ? '☀️' : '🌙';
-    
-    themeToggle.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.toggle('dark');
-      themeToggle.textContent = isDark ? '☀️' : '🌙';
-    });
+    themeToggle.addEventListener('click', toggleTheme);
   }
-}
-
-// Contact button click effect
-function setupContactButton() {
-  const contactButton = document.querySelector('.contact-button');
+  
+  // Contact button
   if (contactButton) {
     contactButton.addEventListener('click', () => {
+      // Simple animation for the ripple effect
       const ripple = contactButton.querySelector('.ripple');
-      if (ripple) {
-        ripple.style.opacity = '1';
-        ripple.style.transform = 'scale(1.4)';
-        
-        setTimeout(() => {
-          ripple.style.opacity = '0';
-          ripple.style.transform = 'scale(1)';
-        }, 400);
-      }
+      ripple.style.opacity = '0.7';
+      ripple.style.transform = 'scale(1)';
       
-      // Simulating opening contact options
-      alert('Contact options will appear here!');
+      // Reset animation
+      setTimeout(() => {
+        ripple.style.opacity = '0';
+        ripple.style.transform = 'scale(1.5)';
+      }, 300);
+      
+      // Redirect to email
+      window.location.href = 'mailto:akchavan@outlook.com';
     });
+  }
+  
+  // Project card hover effects are handled by CSS
+}
+
+// Initialize theme based on user preference
+function initializeTheme() {
+  // Check if user has a saved preference
+  const savedTheme = localStorage.getItem('theme');
+  
+  if (savedTheme === 'dark') {
+    enableDarkMode();
+  } else {
+    enableLightMode();
   }
 }
 
-// Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  animateElements();
-  setupProjectCards();
-  setupThemeToggle();
-  setupContactButton();
-});
+// Toggle between light and dark theme
+function toggleTheme() {
+  const isDark = document.documentElement.classList.contains('dark');
+  
+  if (isDark) {
+    enableLightMode();
+  } else {
+    enableDarkMode();
+  }
+}
+
+// Enable dark mode
+function enableDarkMode() {
+  document.documentElement.classList.add('dark');
+  localStorage.setItem('theme', 'dark');
+  
+  if (themeToggle) {
+    // Change sun icon to moon
+    themeToggle.innerHTML = `
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    `;
+  }
+  
+  if (themeText) {
+    themeText.textContent = 'Dark';
+  }
+}
+
+// Enable light mode
+function enableLightMode() {
+  document.documentElement.classList.remove('dark');
+  localStorage.setItem('theme', 'light');
+  
+  if (themeToggle) {
+    // Change moon icon back to sun
+    themeToggle.innerHTML = `
+      <circle cx="12" cy="12" r="4"></circle>
+      <path d="M12 2v2"></path>
+      <path d="M12 20v2"></path>
+      <path d="m4.93 4.93 1.41 1.41"></path>
+      <path d="m17.66 17.66 1.41 1.41"></path>
+      <path d="M2 12h2"></path>
+      <path d="M20 12h2"></path>
+      <path d="m6.34 17.66-1.41 1.41"></path>
+      <path d="m19.07 4.93-1.41 1.41"></path>
+    `;
+  }
+  
+  if (themeText) {
+    themeText.textContent = 'Light';
+  }
+}
+
+// Export for testing purposes
+export { toggleTheme, enableDarkMode, enableLightMode };
